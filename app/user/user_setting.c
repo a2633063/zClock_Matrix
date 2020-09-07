@@ -21,6 +21,7 @@ user_setting_init(void) {
 	int16_t i, j;
 	user_setting_get_config();
 
+	os_printf("Config version:%d\r\n", user_config.version);
 	os_printf("Device name:\"%s\"\r\n", user_config.name);
 	os_printf("MQTT Service ip:\"%s:%d\"\r\n", user_config.mqtt_ip, user_config.mqtt_port);
 	os_printf("MQTT Service user:\"%s\"\r\n", user_config.mqtt_user);

@@ -28,9 +28,19 @@ user_con_received(void *arg, char *pusrdata, unsigned short length) {
 
 	struct espconn *pesp_conn = arg;
 
-	int i, j;
-	uint32_t k;
-
 	user_json_analysis(true, pusrdata);
 
 }
+
+
+LOCAL os_timer_t function_restart_timer; //timer,一段时间后重启设备
+void user_function_restart_timer_fun(void *arg) {
+	system_restart();
+}
+void ICACHE_FLASH_ATTR
+user_function_restart(uint32_t t) {
+	os_timer_disarm(&function_restart_timer);
+	os_timer_setfn(&function_restart_timer, (os_timer_func_t *) user_function_restart_timer_fun, NULL);
+	os_timer_arm(&function_restart_timer, t, 0); //一段时间后重启
+}
+

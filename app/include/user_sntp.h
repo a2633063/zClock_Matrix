@@ -21,6 +21,8 @@ struct struct_time {
 };
 
 struct struct_time time;
+
+void ICACHE_FLASH_ATTR user_sntp_init(void);
 void ICACHE_FLASH_ATTR user_check_sntp_stamp(void);
 
 #endif

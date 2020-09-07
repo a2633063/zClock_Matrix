@@ -22,14 +22,13 @@ LOCAL os_timer_t mdns_restart_timer; //timer,获取ip后过一段时间才能启动mdns/设置
 void user_wifi_mdns_restart_timer_fun(uint8 flag);
 /*
  * wifi配置
- * 	wifi连接成功后初始化,配置SmartConfig,wifi指示灯
  */
-
-struct mdns_info info;
 char mdns_strName[32] = { 0 };
 char mdns_data_mac[32] = { 0 };
 char mdns_data_type[16] = { 0 };
+char mdns_data_version[16] = { 0 };
 void user_mdns_config() {
+	struct mdns_info *info = (struct mdns_info *) os_zalloc(sizeof(struct mdns_info));
 
 	struct ip_info ipconfig;
 	wifi_get_ip_info(STATION_IF, &ipconfig);
@@ -38,16 +37,21 @@ void user_mdns_config() {
 	os_memset(mdns_data_mac, 0, 32);
 	os_memset(mdns_data_type, 0, 16);
 	os_sprintf(mdns_strName, MDNS_DEVICE_NAME, strMac + 8);
-	info.host_name = mdns_strName;
-	info.ipAddr = ipconfig.ip.addr; //ESP8266 station IP; //ESP8266 station IP
-	info.server_name = "zcontrol";
-	info.server_port = 10182;
-	//info.txt_data[0] = "version = "VERSION;
-	os_sprintf(mdns_data_mac, "mac = %s", strMac);
-	info.txt_data[0] = mdns_data_mac;
-	os_sprintf(mdns_data_type, "type = %d", TYPE);
-	info.txt_data[1] = mdns_data_type;
-	espconn_mdns_init(&info);
+
+	os_sprintf(mdns_data_mac, "mac=%s.", strMac);
+	os_sprintf(mdns_data_type, "type=%d", TYPE);
+	os_sprintf(mdns_data_version, "version=%s", VERSION);
+
+	info->host_name = mdns_strName;
+	info->ipAddr = ipconfig.ip.addr; //ESP8266 station IP
+	info->server_name = "zcontrol";
+	info->server_port = 10182;
+	info->txt_data[0] = mdns_data_mac;
+	info->txt_data[1] = mdns_data_type;
+	info->txt_data[2] = mdns_data_version;
+	os_printf("info\n");
+	espconn_mdns_init(info);
+	os_printf("espconn_mdns_init\n");
 
 }
 //wifi event 回调函数
@@ -73,6 +77,10 @@ void wifi_handle_event_cb(System_Event_t *evt) {
 		os_sprintf(strIP, IPSTR, IP2STR(&evt->event_info.got_ip.ip));
 		wifi_status_led_uninstall();
 		user_set_led_wifi(user_config.on);
+		os_timer_disarm(&mdns_restart_timer);
+		os_timer_setfn(&mdns_restart_timer, (os_timer_func_t *) user_wifi_mdns_restart_timer_fun, (void *) 1);
+		os_timer_arm(&mdns_restart_timer, 200, 0); //启动mdns
+
 		user_mqtt_connect();	//连接MQTT服务器
 		break;
 	case EVENT_SOFTAPMODE_STACONNECTED:
@@ -89,10 +97,20 @@ void wifi_handle_event_cb(System_Event_t *evt) {
 	}
 }
 
-
 void ICACHE_FLASH_ATTR user_wifi_AP() {
+	os_printf("user_wifi_AP\n");
+
+	wifi_status_led_uninstall();
+	user_set_led_wifi(1);
+	uint32 io_info[][3] = { { GPIO_LED_WIFI_IO_MUX, GPIO_LED_WIFI_IO_FUNC, GPIO_LED_WIFI_IO_NUM } };
+	uint32 pwm_duty_init[1] = { 11111111 };
+	pwm_init(1000000, pwm_duty_init, 1, io_info);
+	os_printf("pwm_init\n");
+	pwm_start();
+
 	if (wifi_get_opmode() == STATIONAP_MODE)
 		return;
+
 	wifi_set_opmode_current(SOFTAP_MODE);
 	char strName[32] = { 0 };
 	os_sprintf(strName, MDNS_DEVICE_NAME, strMac + 8);
@@ -164,17 +182,10 @@ void ICACHE_FLASH_ATTR user_wifi_init(void) {
 	i = wifi_station_get_ap_info(config);
 	os_printf("wifi info : %d \n", i);
 
-	if ( GPIO_INPUT_GET(GPIO_ID_PIN(GPIO_KEY_0_IO_NUM)) && i > 0) {
+	if (i > 0) {
 		user_mqtt_init();
 	} else {	//按住按键开机,为热点模式
-		wifi_status_led_uninstall();
-		user_set_led_wifi(1);
 
-		uint32 io_info[][3] = { { GPIO_LED_WIFI_IO_MUX, GPIO_LED_WIFI_IO_FUNC, GPIO_LED_WIFI_IO_NUM } };
-		uint32 pwm_duty_init[1] = { 11111111 };
-		pwm_init(1000000, pwm_duty_init, 1, io_info);
-		os_printf("pwm_init\n");
-		pwm_start();
 		user_wifi_AP();
 		return;
 	}
@@ -189,9 +200,7 @@ void user_wifi_mdns_restart_timer_fun(uint8 flag) {
 		//重启设备
 		wifi_set_opmode(STATION_MODE);
 		wifi_station_set_config(&wifi_set_stationConf);
-		os_timer_disarm(&mdns_restart_timer);
-		os_timer_setfn(&mdns_restart_timer, (os_timer_func_t *) user_wifi_mdns_restart_timer_fun, (void *) 0);
-		os_timer_arm(&mdns_restart_timer, 1000, 0); //1000ms后重启
+		user_function_restart(1000);	//1000ms后重启
 		//system_restart();
 	} else if (flag == 0) {
 		system_restart();

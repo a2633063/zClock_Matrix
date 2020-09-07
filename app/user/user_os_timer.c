@@ -44,32 +44,32 @@ void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
 
 		bool update_user_config_flag = false;
 		//TODO 修改定时功能逻辑
-
-		for (j = 0; j < TIME_TASK_NUM; j++) {
-			if (user_config.task[j].on != 0) {
-
-				uint8_t repeat = user_config.task[j].repeat;
-				if (    //符合条件则改变继电器状态: 秒为0 时分符合设定值, 重复符合设定值
-				time.second == 0 && time.minute == user_config.task[j].minute && time.hour == user_config.task[j].hour
-						&& ((repeat == 0x00) || repeat & (1 << (time.week - 1)))) {
-					if (user_config.on != user_config.task[j].action) {
-						user_config.on = user_config.task[j].action;
-						update_user_config_flag = true;
-					}
-					if (repeat == 0x00) {
-						task_flag = j;
-						user_config.task[j].on = 0;
-						update_user_config_flag = true;
-					}
-				}
-			}
-
-		}
-
-		//更新储存数据 更新定时任务数据
-		if (update_user_config_flag == true) {
-			os_printf("update_user_config_flag");
-			update_user_config_flag = false;
+//
+//		for (j = 0; j < TIME_TASK_NUM; j++) {
+//			if (user_config.task[j].on != 0) {
+//
+//				uint8_t repeat = user_config.task[j].repeat;
+//				if (    //符合条件则改变继电器状态: 秒为0 时分符合设定值, 重复符合设定值
+//				time.second == 0 && time.minute == user_config.task[j].minute && time.hour == user_config.task[j].hour
+//						&& ((repeat == 0x00) || repeat & (1 << (time.week - 1)))) {
+//					if (user_config.on != user_config.task[j].action) {
+//						user_config.on = user_config.task[j].action;
+//						update_user_config_flag = true;
+//					}
+//					if (repeat == 0x00) {
+//						task_flag = j;
+//						user_config.task[j].on = 0;
+//						update_user_config_flag = true;
+//					}
+//				}
+//			}
+//
+//		}
+//
+//		//更新储存数据 更新定时任务数据
+//		if (update_user_config_flag == true) {
+//			os_printf("update_user_config_flag");
+//			update_user_config_flag = false;
 
 //			user_io_set_plug_all(2, 2, 2, 2);
 //			user_setting_set_config();
@@ -96,10 +96,10 @@ void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
 //			cJSON_Delete(json_send);
 			//            os_printf("cJSON_Delete");
 
-			char strJson[128];
-			os_sprintf(strJson, "{\"mac\":\"%s\",\"on\":%d}", strMac, user_config.on);
-			user_json_analysis(false, strJson);
-		}
+//			char strJson[128];
+//			os_sprintf(strJson, "{\"mac\":\"%s\",\"on\":%d}", strMac, user_config.on);
+//			user_json_analysis(false, strJson);
+//		}
 
 	}
 

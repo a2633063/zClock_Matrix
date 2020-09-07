@@ -189,7 +189,7 @@ void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
 
 				if ((p_mqtt_ip && cJSON_IsString(p_mqtt_ip) && p_mqtt_port && cJSON_IsNumber(p_mqtt_port) && p_mqtt_user
 						&& cJSON_IsString(p_mqtt_user) && p_mqtt_password && cJSON_IsString(p_mqtt_password) && !user_mqtt_is_connect())) {
-					system_restart();
+					user_function_restart(200);
 				}
 			}
 
@@ -202,12 +202,12 @@ void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
 
 			user_relay_set(user_config.on);
 			//解析定时任务-----------------------------------------------------------------
-			for (i = 0; i < TIME_TASK_NUM; i++) {
-				if (json_task_analysis(i, pJsonRoot, json_send))
-					update_user_config_flag = true;
-			}
+//			for (i = 0; i < TIME_TASK_NUM; i++) {
+//				if (json_task_analysis(i, pJsonRoot, json_send))
+//					update_user_config_flag = true;
+//			}
 
-			cJSON_AddNumberToObject(json_send, "on", user_config.on);
+//			cJSON_AddNumberToObject(json_send, "on", user_config.on);
 			cJSON_AddStringToObject(json_send, "name", user_config.name);
 
 			char *json_str = cJSON_Print(json_send);

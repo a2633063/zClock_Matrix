@@ -23,7 +23,6 @@ extern char strIP[16];
 
 
 void user_wifi_init(void);
-void user_smartconfig(void);
-void user_smartconfig_stop(void);
-bool user_smartconfig_is_starting();
+void user_wifi_AP(void);
+
 #endif
