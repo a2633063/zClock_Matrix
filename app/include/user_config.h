@@ -1,29 +1,48 @@
-/*
- * ESPRESSIF MIT License
- *
- * Copyright (c) 2016 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
- *
- * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
- * it is free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
- * to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- */
-
 #ifndef __USER_CONFIG_H__
 #define __USER_CONFIG_H__
+#include "os_type.h"
+
+#define VERSION "v0.0.1"
+
+#define TYPE 8
+#define TYPE_NAME "zMOPS"
+
+#define DEVICE_NAME "zMOPS_%02X%02X"
+#define MDNS_DEVICE_NAME "zMOPS_%s"
+
+#define USER_CONFIG_VERSION 1
+
+#define SETTING_MQTT_STRING_LENGTH_MAX  64      //必须 4 字节对齐。
+#define NAME_LENGTH 32		//插座名称字符串最大长度
+
+#define TIME_TASK_NUM 5    //每个插座最多5组定时任务
+
+typedef struct {
+	int8_t hour;      //小时
+	int8_t minute;    //分钟
+	uint8_t repeat; //bit7:一次   bit6-0:周日-周一
+	int8_t action;    //动作
+	int8_t on;    //开关
+} user_plug_task_config_t;
+
+
+
+//用户保存参数结构体
+typedef struct {
+	char version;
+	uint8_t name[NAME_LENGTH];
+	uint8_t mqtt_ip[SETTING_MQTT_STRING_LENGTH_MAX];   //mqtt service ip
+	uint16_t mqtt_port;        //mqtt service port
+	uint8_t mqtt_user[SETTING_MQTT_STRING_LENGTH_MAX];     //mqtt service user
+	uint8_t mqtt_password[SETTING_MQTT_STRING_LENGTH_MAX];     //mqtt service user
+
+	uint8_t on;    //记录当前开关
+	user_plug_task_config_t task[TIME_TASK_NUM];
+
+} user_config_t;
+
+extern char rtc_init;
+extern user_config_t user_config;
 
 #endif
 
