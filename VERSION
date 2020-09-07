@@ -1,0 +1,22 @@
+gwen:
+    at          :   26c15e1
+    crypto      :   f27ffe0
+    espnow      :   f27ffe0
+    main        :   9532ceb
+    net80211    :   f27ffe0
+    pp          :   f27ffe0
+    ssl         :   f27ffe0
+    upgrade     :   f27ffe0
+    wpa         :   f27ffe0
+    wpa2        :   f27ffe0
+    wps         :   f27ffe0
+
+phy:
+    phy         :   1156_0
+
+gitlab:
+    driver      :   5a2a54b4
+    json        :   f55d5fee
+    lwip        :   5623f48f
+    mbedtls     :   82b93fe5
+    smartconfig :   ea1d4a13(v2.5.5)
