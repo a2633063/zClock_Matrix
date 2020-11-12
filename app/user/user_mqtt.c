@@ -16,11 +16,11 @@
 MQTT_Client mqttClient;
 LOCAL bool is_connect = false;
 
-#define MAX_MQTT_TOPIC_SIZE         (40)
-#define MQTT_CLIENT_SUB_TOPIC   "device/zmops/%s/set"
-#define MQTT_CLIENT_PUB_TOPIC   "device/zmops/%s/state"
-#define MQTT_CLIENT_SENSER_TOPIC   "device/zmops/%s/sensor"
-#define MQTT_CLIENT_WILL_TOPIC   "device/zmops/%s/availability"
+#define MAX_MQTT_TOPIC_SIZE         (64)
+#define MQTT_CLIENT_SUB_TOPIC   "device/zclock_matrix/%s/set"
+#define MQTT_CLIENT_PUB_TOPIC   "device/zclock_matrix/%s/state"
+#define MQTT_CLIENT_SENSER_TOPIC   "device/zclock_matrix/%s/sensor"
+#define MQTT_CLIENT_WILL_TOPIC   "device/zclock_matrix/%s/availability"
 
 char topic_state[MAX_MQTT_TOPIC_SIZE];
 char topic_set[MAX_MQTT_TOPIC_SIZE];
@@ -73,7 +73,7 @@ user_mqtt_send_senser(char *arg, char qos, char retained) {
 void mqttDisconnectedCb(uint32_t *args) {
 	os_timer_disarm(&timer_mqtt);
 	MQTT_Client* client = (MQTT_Client*) args;
-	os_printf("MQTT: ¶Ï¿ªÁ¬½Ó\r\n");
+	os_printf("MQTT: Disconnected\r\n");
 	is_connect = false;
 }
 

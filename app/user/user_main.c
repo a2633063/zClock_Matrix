@@ -12,8 +12,9 @@
 #include "user_sntp.h"
 #include "user_mqtt.h"
 #include "user_key.h"
-#include "user_led.h"
+#include "user_max7219.h"
 #include "user_sntp.h"
+#include "user_ds3231.h"
 #include "user_webserver.h"
 
 user_config_t user_config;
@@ -77,15 +78,18 @@ user_init(void)
 {
 	int i, j;
 	uint32 x;
-//	system_uart_swap();
+
 	uart_init(115200, 115200);
 	os_printf(" \n \nStart user%d.bin\n", system_upgrade_userbin_check() + 1);
 	os_printf("SDK version:%s\n", system_get_sdk_version());
 	os_printf("FW version:%s\n", VERSION);
 
 	user_setting_init();
-	user_key_init();
-	user_led_init();
+
+	//user_max7219_init();
+	user_ds3231_init();
+	//user_key_init();
+
 
 	user_wifi_init();
 	user_sntp_init();
@@ -98,6 +102,5 @@ user_init(void)
 	user_webserver_init(80);
 
 
-	user_relay_set(user_config.on);
 }
 

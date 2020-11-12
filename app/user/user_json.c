@@ -193,14 +193,7 @@ void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
 				}
 			}
 
-			//设置on
-			cJSON *p_on = cJSON_GetObjectItem(pJsonRoot, "on");
-			if (p_on && cJSON_IsNumber(p_on)) {
-				update_user_config_flag = true;
-				user_config.on = p_on->valueint;
-			}
 
-			user_relay_set(user_config.on);
 			//解析定时任务-----------------------------------------------------------------
 //			for (i = 0; i < TIME_TASK_NUM; i++) {
 //				if (json_task_analysis(i, pJsonRoot, json_send))

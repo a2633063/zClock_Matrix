@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html" charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+<title>上网设置</title>
+<style>
+  body, p, h1, h2, h3, h4, h5, h6, ul, ol, li, dl, dt, dd, table, th, td, form, fieldset, legend, input, textarea, button, select, img, blockquote {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	vertical-align: baseline;
+	font-family: "Microsoft YaHei","iconfont","FontAwesome"  !important;
+}
+h1, h2, h3, h4, h5, h6 {
+	font-weight: normal;
+}
+body{
+	background: #f5f5f5
+	}
+body, html {
+	height: 100%;
+	max-height: 100%;
+}
+html{font-size:62.5%;}
+
+.header {
+	background: #f56c6c;
+	height:48px;
+	line-height:48px;
+	overflow: hidden;
+	width: 100%;
+	box-sizing: border-box;
+	position: relative;
+}
+.header h3 {
+	font-size: 18px;
+	line-height: 48px;
+	text-align: center;
+	color: #fff;
+}
+
+.header .btn-return {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+}
+.wifi-set .content{
+	margin:10px;
+	-webkit-box-flex: 1;
+    -moz-box-flex: 1;
+    -webkit-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+}
+.geteway-info-box .input-field{
+	line-height:20px;
+	vertical-align:middle;
+	border: 1px solid #d7d7d7;
+    height: 58px;
+    background: #fff;
+    box-sizing: border-box;
+    position: relative;
+    margin-bottom: -1px;
+    padding: 19px 15px 19px 18px;
+}
+.input-field input {
+    height: 20px;
+    line-height: 20px;
+    font-size: 14px;
+    width: 100%;
+    border: 0 none;
+    background: transparent;
+	outline: medium;
+}
+.input-field:first-of-type {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+.input-field:last-of-type {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+.btn{
+	height:40px;
+	line-height:40px;
+	font-size:14px;
+	display:block;
+	border: 0 none;
+	color: #FFF;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	outline: none;
+	cursor: pointer;
+	text-align:center;
+	min-width:70px;
+	padding:0 10px;
+}
+.btn-red{
+	background-color:#f56c6c;
+}
+.geteway-btn button {
+    width: 100%;
+	margin:35px 0;
+}
+</style>
+
+</head>
+
+<body>
+<div class="main wifi-set">
+    <header  class="header">
+        <h3>上网设置</h3>
+    </header>
+    <div class="content">
+	<form action="result.htm" method="post">
+       <section class="geteway-info-box">
+          <div class="input-field">
+             <input id="ssid" type="text" name="SSID" value="" placeholder="WIFI名称">
+          </div>
+          <div class="input-field">
+             <input type="text" name="PASS" value="" placeholder="输入密码">
+          </div>
+        </section>
+        <section class="geteway-btn"><button type="submit" name="next" class="btn btn-red btn-next">下一步</button></section>
+	</form>
+    </div>
+</div>
+</body>
+</html>

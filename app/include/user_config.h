@@ -2,15 +2,19 @@
 #define __USER_CONFIG_H__
 #include "os_type.h"
 
+#define BCDtoDEC(x) ( ((x)>>4)*10+(x)%0x10  )           //BCD码转换为十进制表示方式
+#define DECtoBCD(x) ( (((x)/10)<<4)+(x)%10  )           //十进制转换为BCD码表示方式
+
+
 #define VERSION "v0.0.1"
 
-#define TYPE 8
-#define TYPE_NAME "zMOPS"
+#define TYPE 10
+#define TYPE_NAME "zClock_Matrix"
 
-#define DEVICE_NAME "zMOPS_%02X%02X"
-#define MDNS_DEVICE_NAME "zMOPS_%s"
+#define DEVICE_NAME "zClock_Matrix_%02X%02X"
+#define MDNS_DEVICE_NAME "zClock_Matrix_%s"
 
-#define USER_CONFIG_VERSION 1
+#define USER_CONFIG_VERSION 2
 
 #define SETTING_MQTT_STRING_LENGTH_MAX  64      //必须 4 字节对齐。
 #define NAME_LENGTH 32		//插座名称字符串最大长度

@@ -6,7 +6,7 @@
 
 #include "smartconfig.h"
 #include "user_wifi.h"
-#include "user_led.h"
+#include "user_max7219.h"
 #include "user_key.h"
 
 #include "user_mqtt.h"
@@ -64,7 +64,6 @@ void wifi_handle_event_cb(System_Event_t *evt) {
 	case EVENT_STAMODE_DISCONNECTED:
 		wifi_states = STATE_WIFI_STAMODE_DISCONNECTED;
 		os_printf("wifi disconnect from ssid %s, reason %d\n", evt->event_info.disconnected.ssid, evt->event_info.disconnected.reason);
-		wifi_status_led_install(GPIO_LED_WIFI_IO_NUM, GPIO_LED_WIFI_IO_MUX, GPIO_LED_WIFI_IO_FUNC);
 		break;
 	case EVENT_STAMODE_AUTHMODE_CHANGE:
 		os_printf("wifi change mode: %d -> %d\n", evt->event_info.auth_change.old_mode, evt->event_info.auth_change.new_mode);
@@ -75,8 +74,7 @@ void wifi_handle_event_cb(System_Event_t *evt) {
 				IP2STR(&evt->event_info.got_ip.gw));
 		os_printf("\n");
 		os_sprintf(strIP, IPSTR, IP2STR(&evt->event_info.got_ip.ip));
-		wifi_status_led_uninstall();
-		user_set_led_wifi(user_config.on);
+
 		os_timer_disarm(&mdns_restart_timer);
 		os_timer_setfn(&mdns_restart_timer, (os_timer_func_t *) user_wifi_mdns_restart_timer_fun, (void *) 1);
 		os_timer_arm(&mdns_restart_timer, 200, 0); //Æô¶¯mdns
@@ -99,14 +97,6 @@ void wifi_handle_event_cb(System_Event_t *evt) {
 
 void ICACHE_FLASH_ATTR user_wifi_AP() {
 	os_printf("user_wifi_AP\n");
-
-	wifi_status_led_uninstall();
-	user_set_led_wifi(1);
-	uint32 io_info[][3] = { { GPIO_LED_WIFI_IO_MUX, GPIO_LED_WIFI_IO_FUNC, GPIO_LED_WIFI_IO_NUM } };
-	uint32 pwm_duty_init[1] = { 11111111 };
-	pwm_init(1000000, pwm_duty_init, 1, io_info);
-	os_printf("pwm_init\n");
-	pwm_start();
 
 	if (wifi_get_opmode() == STATIONAP_MODE)
 		return;
@@ -168,8 +158,7 @@ void ICACHE_FLASH_ATTR user_wifi_init(void) {
 		os_printf("set auto connect AP:true");
 	}
 	wifi_set_event_handler_cb(wifi_handle_event_cb);
-	user_set_led_wifi(0);
-	wifi_status_led_install(GPIO_LED_WIFI_IO_NUM, GPIO_LED_WIFI_IO_MUX, GPIO_LED_WIFI_IO_FUNC);
+
 	wifi_get_macaddr(STATION_IF, hwaddr);
 	os_sprintf(strMac, "%02x%02x%02x%02x%02x%02x", MAC2STR(hwaddr));
 	os_printf("strMac : %s \n", strMac);

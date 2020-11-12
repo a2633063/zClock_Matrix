@@ -10,12 +10,8 @@
 
 #include "user_webserver.h"
 #include "user_wifi.h"
+#include "web_data.h"
 
-extern const unsigned char wififail[0xAC9];
-
-extern const unsigned char wifisetting[3373];
-
-extern const unsigned char wifisuccess[0x9BC];
 
 LOCAL void ICACHE_FLASH_ATTR data_send(void *arg, bool responseOK, char *psend);
 
@@ -76,7 +72,7 @@ LOCAL void ICACHE_FLASH_ATTR html_decode(char *old, char *new) {
 
 void ICACHE_FLASH_ATTR web_send_wifisetting_page(void *arg, URL_Frame *purl_frame) {
 	struct espconn *ptrespconn = arg;
-	data_send(ptrespconn, true, wifisetting);
+	data_send(ptrespconn, true, web_wifisetting_html);
 }
 
 void ICACHE_FLASH_ATTR web_send_result_page(void *arg, URL_Frame *purl_frame) {
@@ -121,6 +117,9 @@ void ICACHE_FLASH_ATTR web_send_result_page(void *arg, URL_Frame *purl_frame) {
 	os_printf("ssid_encoded:%s\n", ssid_encoded);
 	os_printf("ssid:%s\n", ssid);
 
+	if (os_strlen(ssid) < 1)
+		goto Error;
+
 	//获取PASSWORD
 	pbufer = (char *) os_strstr(precv, "PASS=");
 	if (pbufer != NULL) {
@@ -141,17 +140,21 @@ void ICACHE_FLASH_ATTR web_send_result_page(void *arg, URL_Frame *purl_frame) {
 	os_printf("password_encoded:%s\n", password_encoded);
 	os_printf("password:%s\n", password);
 
-	data_send(ptrespconn, true, wifisuccess);
+	if (os_strlen(password) > 0 && os_strlen(password) < 8)
+		goto Error;
+	data_send(ptrespconn, true, web_wifisuccess_html);
 
 	//连接wifi
 	user_wifi_set(ssid, password);
 	return;
-	Error: data_send(ptrespconn, true, wififail);
+	Error: data_send(ptrespconn, true, web_wififail_html);
 }
 
-struct http_uri_call g_app_handlers[] = { { "/", web_send_wifisetting_page, NULL, NULL, NULL }, { "/result.htm", NULL, web_send_result_page, NULL,
-NULL }, { "/setting.htm", web_send_wifisetting_page, NULL, NULL, NULL }, };
-
+struct http_uri_call g_app_handlers[] = {
+		{ "/", web_send_wifisetting_page, NULL, NULL, NULL },
+		{ "/result.htm", NULL, web_send_result_page, NULL,NULL },
+		{ "/setting.htm", web_send_wifisetting_page, NULL, NULL, NULL }
+};
 /******************************************************************************
  * FunctionName : parse_url
  * Description  : parse the received data from the server
