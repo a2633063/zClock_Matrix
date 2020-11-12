@@ -24,7 +24,8 @@ SPECIAL_MKTARGETS=$(APP_MKTARGETS)
 SUBDIRS=    \
 	mqtt	\
 	cJson	\
-    user	
+    user	\
+	driver
 
 endif # } PDIR
 
@@ -50,7 +51,8 @@ endif
 COMPONENTS_eagle.app.v6 = \
 	mqtt/libmqtt.a	\
 	cJson/libcJson.a	\
-	user/libuser.a	
+	user/libuser.a	\
+	driver/libdriver.a
 
 LINKFLAGS_eagle.app.v6 = \
     -L../lib        \

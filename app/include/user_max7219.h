@@ -9,5 +9,5 @@
 
 void user_max7219_init(void);
 void user_max7219_clear(void);
-
+void user_max7219_set_brightness(uint8 bri);
 #endif

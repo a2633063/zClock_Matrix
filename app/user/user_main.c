@@ -86,9 +86,9 @@ user_init(void)
 
 	user_setting_init();
 
-	//user_max7219_init();
+	user_max7219_init();
 	user_ds3231_init();
-	//user_key_init();
+	user_key_init();
 
 
 	user_wifi_init();

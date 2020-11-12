@@ -10,25 +10,6 @@
 void ICACHE_FLASH_ATTR
 user_ds3231_init(void) {
 	i2c_master_gpio_init();
-
-	uint8 ack, i;
-
-
-
-
-	for (i = 0x00; i < 254; i++) {
-		i2c_master_start();
-		i2c_master_writeByte(i);
-		ack = i2c_master_checkAck();
-		if (!ack) {
-			os_printf("Addr(0x%x) not ack when writing the device addr\n", i);
-		}else
-		{
-			os_printf("Addr(0x%x) !!!!!!!!!!!!!!!!!!\n", i);
-		}
-		i2c_master_stop();
-		os_delay_us(2000);
-	}
 }
 
 bool ICACHE_FLASH_ATTR
