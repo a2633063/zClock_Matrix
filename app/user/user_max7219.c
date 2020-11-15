@@ -6,9 +6,53 @@
 
 #include "user_max7219.h"
 #include "driver\spi.h"
+
+uint8_t display[4][8];
+uint8_t brightness = 1;
+uint8_t brightness_on = 1;
+extern unsigned char ASCII_Font_5x8[96][8];
+
+LOCAL os_timer_t timer_max7219;
+
+static void ICACHE_FLASH_ATTR
+max7219_set_reg(uint8_t reg, uint8_t dat) {
+	uint8_t i;
+	GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 0);
+	for (i = 0; i < 4; i++) {
+		spi_mast_byte_write(HSPI, reg);
+		spi_mast_byte_write(HSPI, dat);
+	}
+	GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 1);
+}
+
+void user_max7219_timer_func(void *arg) {
+	uint8_t i, j;
+	for (i = 0; i < 8; i++) {
+		GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 0);
+		for (j = 0; j < 4; j++) {
+			spi_mast_byte_write(HSPI, i + 1);
+			if (user_config.direction == 1) {
+				SET_PERI_REG_MASK(SPI_CTRL(HSPI), SPI_WR_BIT_ORDER);
+				SET_PERI_REG_MASK(SPI_CTRL(HSPI), SPI_RD_BIT_ORDER);
+				spi_mast_byte_write(HSPI, display[j][7 - i]);
+			} else
+				spi_mast_byte_write(HSPI, display[3 - j][i]);
+			if (user_config.direction == 1) {
+				CLEAR_PERI_REG_MASK(SPI_CTRL(HSPI), SPI_WR_BIT_ORDER);
+				CLEAR_PERI_REG_MASK(SPI_CTRL(HSPI), SPI_RD_BIT_ORDER);
+
+			}
+		}
+		GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 1);
+	}
+
+	user_max7219_set_on(brightness_on);
+	user_max7219_set_brightness(brightness);
+}
+
 void ICACHE_FLASH_ATTR
 user_max7219_init(void) {
-	uint8 max7219_init_dat[7][2] = {
+	uint8_t max7219_init_dat[7][2] = {
 	//max7219 init dat
 			{ 0x0C, 0x00 },    // display off
 			{ 0x00, 0xFF },    // no LEDtest
@@ -19,7 +63,7 @@ user_max7219_init(void) {
 			{ 0x0C, 0x01 }    // display on
 	};
 
-	uint8 i, j;
+	uint8_t i, j;
 	spi_master_init(HSPI);
 //    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, 2);//configure io to spi mode
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, 2);    //configure io to spi mode
@@ -32,45 +76,72 @@ user_max7219_init(void) {
 	os_delay_us(100);
 
 	for (i = 0; i < 7; i++) {
-		GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 0);
-		//os_delay_us(10);
-		for (j = 0; j < 4; j++) {
-			spi_mast_byte_write(HSPI, max7219_init_dat[i][0]);     //register
-			spi_mast_byte_write(HSPI, max7219_init_dat[i][1]);     //value
-		}
-		//os_delay_us(10);
-		GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 1);
+		max7219_set_reg(max7219_init_dat[i][0], max7219_init_dat[i][1]);
 	}
-	user_max7219_clear();
-	user_max7219_set_brightness(1);
+	user_max7219_clear(0xff);
+//	user_max7219_set_brightness(1);
+//	user_max7219_dis_char('A', 0, 0);
+	user_max7219_dis_char('B',6,0);
+//	user_max7219_dis_char('C', 12, 0);
+//	user_max7219_dis_char('D', 18, 0);
+//	user_max7219_dis_char('E', 24, 0);
+	//	os_timer_disarm(&timer_tm1628);
+	os_timer_setfn(&timer_max7219, (os_timer_func_t *) user_max7219_timer_func, NULL);
+	os_timer_arm(&timer_max7219, 150, 1);	//每150ms刷新一次显示
 }
 
 void ICACHE_FLASH_ATTR
-user_max7219_clear() {
-	uint8 i, j;
+user_max7219_clear(uint8_t dat) {
+	uint8_t i, j;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 8; j++) {
+			display[i][j] = dat;
+		}
+	}
 	for (i = 0; i < 8; i++) {
-		GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 0);
-
-		for (j = 4; j > 0; j--) {
-			spi_mast_byte_write(HSPI, i + 1);     //register
-			spi_mast_byte_write(HSPI, i * 4 + j);     //value
-		}
-		GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 1);
+		max7219_set_reg(i + 1, dat);
 	}
 }
 
 void ICACHE_FLASH_ATTR
-user_max7219_set_brightness(uint8 bri) {
-	uint8 i;
+user_max7219_set_brightness(uint8_t bri) {
+	uint8_t i;
 	if (bri > 15)
 		bri = 15;
+	max7219_set_reg(0x0a, bri);
+}
+void ICACHE_FLASH_ATTR
+user_max7219_set_on(uint8_t on) {
+	uint8_t i;
+	if (on > 1)
+		on = 1;
+	max7219_set_reg(0x0c, on);
+}
 
-	GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 0);
+#define FONT_WIDTH_6
 
-	for (i = 0; i < 4; i++) {
-		spi_mast_byte_write(HSPI, 0x0A);     //register
-		spi_mast_byte_write(HSPI, bri);     //value
+void ICACHE_FLASH_ATTR
+user_max7219_dis_char(char ch, uint8_t x, uint8_t y) {
+	uint8_t i, j, k;
+	uint8_t x_d, x_r;	//x_d  x_r
+	x_d = x / 8;
+	x_r = x % 8;
+
+	for (i = 0; i < 8 && y + i < 8; i++) {
+#ifdef FONT_WIDTH_6
+		display[x_d][y + i] = display[x_d][y + i] & (~(0xfc >> x_r)) | (ASCII_Font_5x8[ch - ' '][y + i] >> x_r);
+		if (x_d + 1 < 4)
+			display[x_d + 1][y + i] = display[x_d + 1][y + i] & (~(0xfc << (8 - x_r))) | (ASCII_Font_5x8[ch - ' '][y + i] << (8 - x_r));
+#else
+		display[x_d][y + i] = display[x_d][y + i] & (~(0xf8 >> x_r)) | (ASCII_Font_5x8[ch - ' '][y + i] >> x_r);
+		if (x_d + 1 < 4)
+		display[x_d + 1][y + i] = display[x_d + 1][y + i] & (~(0xf8 << (8 - x_r))) | (ASCII_Font_5x8[ch - ' '][y + i] << (8 - x_r));
+#endif
 	}
-	GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 1);
+}
+
+
+void ICACHE_FLASH_ATTR
+user_max7219_dis_str(char * ch, uint8_t x, uint8_t y) {
 
 }

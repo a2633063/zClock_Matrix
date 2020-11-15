@@ -12,13 +12,14 @@
 #include "user_json.h"
 #include "user_setting.h"
 #include "user_function.h"
+#include "user_max7219.h"
 
 bool ICACHE_FLASH_ATTR json_task_analysis(unsigned char x, cJSON * pJsonRoot, cJSON * pJsonSend);
 
 void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
-	uint8_t i;
+	uint8_t i, temp;
 	bool update_user_config_flag = false;   //标志位,记录最后是否需要更新储存的数据
-	uint8_t plug_retained = 0;
+	uint8_t retained = 0;
 	cJSON *pJsonRoot = cJSON_Parse(jsonRoot);	//首先整体判断是否为一个json格式的数据
 	//如果是否json格式数据
 	if (pJsonRoot != NULL) {
@@ -66,7 +67,21 @@ void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
 			if (p_version) {
 				cJSON_AddStringToObject(json_send, "version", VERSION);
 			}
-
+			//设置显示方向
+			cJSON *p_direction = cJSON_GetObjectItem(pJsonRoot, "direction");
+			if (p_direction) {
+				if (cJSON_IsNumber(p_direction)) {
+					if (p_direction->valueint == 1)
+						temp = 1;
+					else
+						temp = 0;
+					if (temp != user_config.direction) {
+						update_user_config_flag = true;
+						user_config.direction = temp;
+					}
+				}
+				cJSON_AddNumberToObject(json_send, "direction", user_config.direction);
+			}
 			//返回wifi ssid
 			cJSON *p_ssid = cJSON_GetObjectItem(pJsonRoot, "ssid");
 			if (p_ssid) {
@@ -76,6 +91,37 @@ void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
 				} else {
 					cJSON_AddStringToObject(json_send, "ssid", "get wifi_ssid fail");
 				}
+			}
+
+			//设置亮度/开关
+			cJSON *p_on = cJSON_GetObjectItem(pJsonRoot, "on");
+			cJSON *p_brightness = cJSON_GetObjectItem(pJsonRoot, "brightness");
+			if (p_on || p_brightness ) {
+				if (p_brightness && cJSON_IsNumber(p_brightness) && p_brightness->valueint < 16 && p_brightness->valueint >= 0) {
+					if (p_brightness->valueint == 0) {
+						brightness_on = 0;
+					} else {
+						brightness = p_brightness->valueint;
+						brightness_on = 1;
+					}
+					retained = 1;
+				}
+				if (p_on && cJSON_IsNumber(p_on) && p_on->valueint <= 1 && p_on->valueint >= 0) {
+					brightness_on = p_on->valueint;
+					retained = 1;
+				}
+				cJSON_AddNumberToObject(json_send, "brightness", brightness_on == 0 ? 0 : brightness);
+				cJSON_AddNumberToObject(json_send, "on", brightness_on == 0 ? 0 : 1);
+			}
+
+			//解析测试
+			cJSON *p_test = cJSON_GetObjectItem(pJsonRoot, "test");
+			if (p_test && cJSON_IsArray(p_test)) {
+				for (i = 0; i < cJSON_GetArraySize(p_test); i++) {
+					display[i / 8][i % 8] = cJSON_GetArrayItem(p_test, i)->valueint;
+				}
+
+				cJSON_AddNumberToObject(json_send, "test", cJSON_GetArraySize(p_test));
 			}
 
 			cJSON *p_setting = cJSON_GetObjectItem(pJsonRoot, "setting");
@@ -193,19 +239,17 @@ void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
 				}
 			}
 
-
 			//解析定时任务-----------------------------------------------------------------
 //			for (i = 0; i < TIME_TASK_NUM; i++) {
 //				if (json_task_analysis(i, pJsonRoot, json_send))
 //					update_user_config_flag = true;
 //			}
 
-//			cJSON_AddNumberToObject(json_send, "on", user_config.on);
 			cJSON_AddStringToObject(json_send, "name", user_config.name);
 
 			char *json_str = cJSON_Print(json_send);
 			os_printf("json_send: %s\r\n", json_str);
-			user_send(udp_flag, json_str, plug_retained);
+			user_send(udp_flag, json_str, retained);
 			cJSON_free((void *) json_str);
 
 			if (update_user_config_flag) {

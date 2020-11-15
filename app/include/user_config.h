@@ -39,7 +39,7 @@ typedef struct {
 	uint16_t mqtt_port;        //mqtt service port
 	uint8_t mqtt_user[SETTING_MQTT_STRING_LENGTH_MAX];     //mqtt service user
 	uint8_t mqtt_password[SETTING_MQTT_STRING_LENGTH_MAX];     //mqtt service user
-
+	uint8_t direction;
 	uint8_t on;    //记录当前开关
 	user_plug_task_config_t task[TIME_TASK_NUM];
 
