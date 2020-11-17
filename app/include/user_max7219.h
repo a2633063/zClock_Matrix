@@ -12,7 +12,10 @@ extern uint8_t brightness_on;
 extern uint8_t brightness;
 void user_max7219_init(void);
 void user_max7219_clear(uint8_t dat);
-void user_max7219_set_brightness(uint8 bri);
+void user_max7219_set_brightness(uint8_t bri);
 void user_max7219_set_on(uint8_t on);
-void user_max7219_dis_char(char ch, uint8_t x, uint8_t y);
+void user_max7219_dis_char(char ch, int8_t x, int8_t y);
+void user_max7219_dis_str(char * ch, int8_t x, int8_t y);
+void user_max7219_dis_num(char ch, int8_t x, int8_t y);
+void user_max7219_dis_num_small(char ch, int8_t x, int8_t y);
 #endif

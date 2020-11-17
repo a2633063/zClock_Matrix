@@ -17,6 +17,7 @@
 #include "user_ds3231.h"
 #include "user_webserver.h"
 
+display_state_t display_state = DISPLAY_STATE_INIT;
 user_config_t user_config;
 
 #if ((SPI_FLASH_SIZE_MAP == 0) || (SPI_FLASH_SIZE_MAP == 1))
@@ -93,7 +94,7 @@ user_init(void)
 
 	user_wifi_init();
 	user_sntp_init();
-	//user_os_timer_init();
+	user_os_timer_init();
 	//UDP初始化,监听端口10182,当接收到特定字符串时,返回本设备IP及MAC地址
 	user_devicefind_init(10182);
 //	TCP初始化,监听端口10191

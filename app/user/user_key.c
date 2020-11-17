@@ -18,7 +18,6 @@ LOCAL struct single_key_param *single_key[GPIO_KEY_NUM];
 
 LOCAL unsigned char key_press_flag = 0;	//按键长按标志位,防止按键长按后松开时执行短按代码
 
-
 LOCAL void ICACHE_FLASH_ATTR
 user_key_short_press(void) {
 	uint8_t i, result = 1;
@@ -39,6 +38,12 @@ LOCAL void ICACHE_FLASH_ATTR
 user_key_long_press(void) {
 	os_printf("user_key_long_press\n");
 	key_press_flag = 1;
+	char strJson[128];
+	user_config.direction = !user_config.direction;
+
+	os_sprintf(strJson, "{\"mac\":\"%s\",\"direction\":%d}", strMac, user_config.direction);
+	user_json_analysis(false, strJson);
+
 }
 
 //LOCAL void ICACHE_FLASH_ATTR
@@ -52,7 +57,6 @@ user_key_long_press(void) {
 //	user_setting_set_config();
 //	system_restore();
 //}
-
 
 void ICACHE_FLASH_ATTR
 user_key_init(void) {

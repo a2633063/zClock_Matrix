@@ -7,7 +7,7 @@ BOOL user_mqtt_send_senser(char *arg, char qos, char retained);
 void ICACHE_FLASH_ATTR user_mqtt_connect(void);
 void ICACHE_FLASH_ATTR user_mqtt_disconnect(void);
 void ICACHE_FLASH_ATTR user_mqtt_init(void);
-bool user_mqtt_is_connect();
+bool user_mqtt_is_connect(void);
 
 #endif
 

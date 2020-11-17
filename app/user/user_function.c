@@ -6,6 +6,7 @@
 
 #include "espconn.h"
 
+#include "user_json.h"
 #include "user_wifi.h"
 #include "user_udp.h"
 #include "user_mqtt.h"

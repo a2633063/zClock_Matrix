@@ -10,6 +10,7 @@
 #include "user_wifi.h"
 #include "user_update.h"
 #include "user_json.h"
+#include "user_mqtt.h"
 #include "user_setting.h"
 #include "user_function.h"
 #include "user_max7219.h"
@@ -96,8 +97,8 @@ void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
 			//设置亮度/开关
 			cJSON *p_on = cJSON_GetObjectItem(pJsonRoot, "on");
 			cJSON *p_brightness = cJSON_GetObjectItem(pJsonRoot, "brightness");
-			if (p_on || p_brightness ) {
-				if (p_brightness && cJSON_IsNumber(p_brightness) && p_brightness->valueint < 16 && p_brightness->valueint >= 0) {
+			if (p_on || p_brightness) {
+				if (p_brightness && cJSON_IsNumber(p_brightness) && p_brightness->valueint < 17 && p_brightness->valueint >= 0) {
 					if (p_brightness->valueint == 0) {
 						brightness_on = 0;
 					} else {
@@ -117,9 +118,13 @@ void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
 			//解析测试
 			cJSON *p_test = cJSON_GetObjectItem(pJsonRoot, "test");
 			if (p_test && cJSON_IsArray(p_test)) {
-				for (i = 0; i < cJSON_GetArraySize(p_test); i++) {
-					display[i / 8][i % 8] = cJSON_GetArrayItem(p_test, i)->valueint;
-				}
+				if (cJSON_GetArraySize(p_test) == 2) {
+					user_max7219_clear(0);
+					user_max7219_dis_str("ABCD",cJSON_GetArrayItem(p_test, 0)->valueint,cJSON_GetArrayItem(p_test, 1)->valueint);
+				} else
+					for (i = 0; i < cJSON_GetArraySize(p_test); i++) {
+						display[i / 8][i % 8] = cJSON_GetArrayItem(p_test, i)->valueint;
+					}
 
 				cJSON_AddNumberToObject(json_send, "test", cJSON_GetArraySize(p_test));
 			}

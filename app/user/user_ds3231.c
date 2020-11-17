@@ -13,8 +13,8 @@ user_ds3231_init(void) {
 }
 
 bool ICACHE_FLASH_ATTR
-user_ds3231_write(uint8 addr, uint8 pData) {
-	uint8 ack, i;
+user_ds3231_write(uint8_t addr, uint8_t pData) {
+	uint8_t ack, i;
 	i2c_master_start();
 	i2c_master_writeByte(USER_DS3231_ADDR);
 	ack = i2c_master_checkAck();
@@ -44,8 +44,8 @@ user_ds3231_write(uint8 addr, uint8 pData) {
 }
 
 bool ICACHE_FLASH_ATTR
-user_ds3231_page_write(uint8 addr, uint8 *pData, uint16 len) {
-	uint8 ack, i;
+user_ds3231_page_write(uint8_t addr, uint8_t *pData, uint16_t len) {
+	uint8_t ack, i;
 	i2c_master_start();
 	i2c_master_writeByte(USER_DS3231_ADDR);
 	ack = i2c_master_checkAck();
@@ -75,9 +75,9 @@ user_ds3231_page_write(uint8 addr, uint8 *pData, uint16 len) {
 	}
 	i2c_master_stop();
 }
-uint8 ICACHE_FLASH_ATTR
-user_ds3231_read(uint8 addr) {
-	uint8 ack, i;
+uint8_t ICACHE_FLASH_ATTR
+user_ds3231_read(uint8_t addr) {
+	uint8_t ack, i;
 	i2c_master_start();
 	i2c_master_writeByte(USER_DS3231_ADDR + 1);
 	ack = i2c_master_checkAck();
@@ -103,8 +103,8 @@ user_ds3231_read(uint8 addr) {
 }
 
 bool ICACHE_FLASH_ATTR
-user_ds3231_page_read(uint8 addr, uint8 *pData, uint16 len) {
-	uint8 ack, i;
+user_ds3231_page_read(uint8_t addr, uint8_t *pData, uint16_t len) {
+	uint8_t ack, i;
 	i2c_master_start();
 	i2c_master_writeByte(USER_DS3231_ADDR);
 	ack = i2c_master_checkAck();

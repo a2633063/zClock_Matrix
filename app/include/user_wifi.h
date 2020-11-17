@@ -24,5 +24,5 @@ extern char strIP[16];
 
 void user_wifi_init(void);
 void user_wifi_AP(void);
-
+void user_wifi_set(char *ssid, char *pass);
 #endif

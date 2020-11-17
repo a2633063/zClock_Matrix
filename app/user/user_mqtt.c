@@ -127,7 +127,7 @@ void ICACHE_FLASH_ATTR user_mqtt_init(void) {
 	os_printf("user_mqtt_init\n");
 }
 
-bool ICACHE_FLASH_ATTR user_mqtt_is_connect() {
+bool ICACHE_FLASH_ATTR user_mqtt_is_connect(void) {
 	return is_connect;
 }
 

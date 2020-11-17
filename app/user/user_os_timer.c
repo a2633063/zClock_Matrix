@@ -13,101 +13,134 @@
 #include "os_type.h"
 #include "user_interface.h"
 
+#include "sntp.h"
 #include "user_config.h"
 #include "../cJson/cJSON.h"
 #include "user_key.h"
+#include "user_os_timer.h"
 #include "user_wifi.h"
 #include "user_sntp.h"
+#include "user_max7219.h"
+#include "user_ds3231.h"
 
+uint32_t utc_time = 0;
+
+struct struct_time time;
+uint32_t current_stamp = 0;
+uint8_t timeBCD[7];
 LOCAL os_timer_t timer_rtc;
-
-uint32 utc_time = 0;
+uint32_t timer_count = 0;
+display_state_t display_state_last = DISPLAY_STATE_INIT;
 void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
 
-	uint8_t DeviceBuffer[28] = { 0 };
-	int8_t task_flag = -1;   //记录每个插座哪个任务需要返回数据
+//	uint8_t DeviceBuffer[28] = { 0 };
+//	int8_t task_flag = -1;   //记录每个插座哪个任务需要返回数据
+//	uint8_t i, j;
+
+//	if (utc_time == 0 || (time.second == 59 && time.minute == 59)) { //每小时校准一次
+//		if (wifi_station_get_connect_status() == STATION_GOT_IP) {
+//			utc_time = sntp_get_current_timestamp();
+//		}
+//	}
+//
+//	if (utc_time > 0) {
+//		utc_time++;
+//		os_sprintf(DeviceBuffer, "%s", sntp_get_real_time(utc_time));
+//		time_strtohex(&time,DeviceBuffer);
+//
+//		if (time.second == 0)
+//			os_printf("20%02d/%02d/%02d 周%d %02d:%02d:%02d\n", time.year, time.month, time.day, time.week, time.hour, time.minute, time.second);
+//
+//		bool update_user_config_flag = false;
+//	}
+	static uint8_t timer_num = 0;
+	uint32_t current_stamp_temp;
 	uint8_t i, j;
+	int16_t dis_scroll_temp;
 
-	if (utc_time == 0 || (time.second == 59 && time.minute == 59)) { //每小时校准一次
-		if (wifi_station_get_connect_status() == STATION_GOT_IP) {
-			utc_time = sntp_get_current_timestamp();
+	if (++timer_num > 4) {
+		if ((current_stamp == 0 || (time.hour == 4 && time.minute == 00 && time.second == 20))
+				&& wifi_station_get_connect_status() == STATION_GOT_IP) {
+			current_stamp_temp = sntp_get_current_timestamp();
+			if (current_stamp_temp > 0) {
+				current_stamp = current_stamp_temp;
+
+				time_strtohex(&time, (char*) (sntp_get_real_time(current_stamp)));
+				os_printf("SNTP : %d \n", current_stamp);
+				timeBCD[0] = DECtoBCD(time.second);
+				timeBCD[1] = DECtoBCD(time.minute);
+				timeBCD[2] = DECtoBCD(time.hour);
+				timeBCD[3] = DECtoBCD(time.week);
+				timeBCD[4] = DECtoBCD(time.day);
+				timeBCD[5] = DECtoBCD(time.month);
+				timeBCD[6] = DECtoBCD(time.year);
+				user_ds3231_page_write(0, timeBCD, 7);	//时间写入ds3231
+				os_printf("SNTP to ds3231 \n");
+			} else {
+				os_printf("SNTP : fail \n");
+			}
 		}
+
+		user_ds3231_page_read(0, timeBCD, 7);
+		time.second = BCDtoDEC(timeBCD[0]);
+		time.minute = BCDtoDEC(timeBCD[1]);
+		time.hour = BCDtoDEC(timeBCD[2]);
+		time.week = BCDtoDEC(timeBCD[3]);
+		time.day = BCDtoDEC(timeBCD[4]);
+		time.month = BCDtoDEC(timeBCD[5]);
+		time.year = BCDtoDEC(timeBCD[6]);
+
+//	if (time.second == 0)
+//		os_printf("20%02d/%02d/%02d 周%d %02d:%02d:%02d\n", time.year, time.month, time.day, time.week, time.hour, time.minute, time.second);
 	}
+	switch (display_state) {
+	case DISPLAY_STATE_INIT:
+		timer_count++;
 
-	if (utc_time > 0) {
-		utc_time++;
-		os_sprintf(DeviceBuffer, "%s", sntp_get_real_time(utc_time));
-		time_strtohex(DeviceBuffer);
+		user_max7219_clear(0);
+		user_max7219_dis_char('l', 11, timer_count > 8 ? 0 : timer_count - 7);
+		user_max7219_dis_str("zC", 0, timer_count > 8 ? 0 : timer_count - 7);
+		user_max7219_dis_str("oc", 16, timer_count > 8 ? 0 : timer_count - 7);
+		user_max7219_dis_char('k', 27, timer_count > 8 ? 0 : timer_count - 7);
 
-		if (time.second == 0)
-			os_printf("20%02d/%02d/%02d 周%d %02d:%02d:%02d\n", time.year, time.month, time.day, time.week, time.hour, time.minute, time.second);
+		if (timer_count > 14) {
+			display_state = DISPLAY_STATE_TIME;
+			timer_count = 0;
+		}
+		break;
 
-		bool update_user_config_flag = false;
-		//TODO 修改定时功能逻辑
-//
-//		for (j = 0; j < TIME_TASK_NUM; j++) {
-//			if (user_config.task[j].on != 0) {
-//
-//				uint8_t repeat = user_config.task[j].repeat;
-//				if (    //符合条件则改变继电器状态: 秒为0 时分符合设定值, 重复符合设定值
-//				time.second == 0 && time.minute == user_config.task[j].minute && time.hour == user_config.task[j].hour
-//						&& ((repeat == 0x00) || repeat & (1 << (time.week - 1)))) {
-//					if (user_config.on != user_config.task[j].action) {
-//						user_config.on = user_config.task[j].action;
-//						update_user_config_flag = true;
-//					}
-//					if (repeat == 0x00) {
-//						task_flag = j;
-//						user_config.task[j].on = 0;
-//						update_user_config_flag = true;
-//					}
-//				}
-//			}
-//
-//		}
-//
-//		//更新储存数据 更新定时任务数据
-//		if (update_user_config_flag == true) {
-//			os_printf("update_user_config_flag");
-//			update_user_config_flag = false;
-
-//			user_io_set_plug_all(2, 2, 2, 2);
-//			user_setting_set_config();
-//			cJSON *json_send = cJSON_CreateObject();
-//			cJSON_AddStringToObject(json_send, "mac", strMac);
-//			cJSON_AddNumberToObject(json_send, "on", user_config.on);
-//			if (task_flag >= 0) {
-//				j = task_flag;
-//				char strTemp2[] = "task_X";
-//				strTemp2[5] = j + '0';
-//				cJSON *json_send_plug_task = cJSON_CreateObject();
-//				cJSON_AddNumberToObject(json_send_plug_task, "hour", user_config.task[j].hour);
-//				cJSON_AddNumberToObject(json_send_plug_task, "minute", user_config.task[j].minute);
-//				cJSON_AddNumberToObject(json_send_plug_task, "repeat", user_config.task[j].repeat);
-//				cJSON_AddNumberToObject(json_send_plug_task, "action", user_config.task[j].action);
-//				cJSON_AddNumberToObject(json_send_plug_task, "on", user_config.task[j].on);
-//				cJSON_AddItemToObject(json_send, strTemp2, json_send_plug_task);
-//				task_flag = -1;
-//			}
-//			char *json_str = cJSON_Print(json_send);
-//			user_send( false, json_str);    //发送数据
-
-//			os_free(json_str);
-//			cJSON_Delete(json_send);
-			//            os_printf("cJSON_Delete");
-
-//			char strJson[128];
-//			os_sprintf(strJson, "{\"mac\":\"%s\",\"on\":%d}", strMac, user_config.on);
-//			user_json_analysis(false, strJson);
-//		}
-
+	case DISPLAY_STATE_TIME:
+		if (display_state_last != display_state) {
+			for (i = 0; i < 7; i++) {
+				for (j = 0; j < 4; j++)
+					display[j][i] = display[j][i + 1];
+			}
+		}
+		display[1][1] = 0x10;
+		display[1][2] = 0x10;
+		display[1][4] = 0x10;
+		display[1][5] = 0x10;
+		//	user_max7219_dis_num(':',11,0);
+		user_max7219_dis_num(time.hour / 10, 0, 0);
+		user_max7219_dis_num(time.hour % 10, 5, 0);
+		user_max7219_dis_num(time.minute / 10, 14, 0);
+		user_max7219_dis_num(time.minute % 10, 19, 0);
+		user_max7219_dis_num_small(time.second / 10, 25, 2);
+		user_max7219_dis_num_small(time.second % 10, 29, 2);
+		break;
 	}
 
 }
 
 void ICACHE_FLASH_ATTR
+user_set_display_state(display_state_t s) {
+	display_state_last = display_state;
+	display_state = s;
+	timer_count = 0;
+}
+void ICACHE_FLASH_ATTR
 user_os_timer_init(void) {
 	os_timer_disarm(&timer_rtc);
 	os_timer_setfn(&timer_rtc, (os_timer_func_t *) user_os_timer_func, NULL);
-	os_timer_arm(&timer_rtc, 1000, 1);
+	os_timer_arm(&timer_rtc, 100, 1);
 }

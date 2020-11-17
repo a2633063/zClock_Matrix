@@ -5,7 +5,6 @@
 #define BCDtoDEC(x) ( ((x)>>4)*10+(x)%0x10  )           //BCD码转换为十进制表示方式
 #define DECtoBCD(x) ( (((x)/10)<<4)+(x)%10  )           //十进制转换为BCD码表示方式
 
-
 #define VERSION "v0.0.1"
 
 #define TYPE 10
@@ -29,8 +28,6 @@ typedef struct {
 	int8_t on;    //开关
 } user_plug_task_config_t;
 
-
-
 //用户保存参数结构体
 typedef struct {
 	char version;
@@ -48,5 +45,18 @@ typedef struct {
 extern char rtc_init;
 extern user_config_t user_config;
 
+typedef enum {
+
+	DISPLAY_STATE_INIT = 0,
+	DISPLAY_STATE_WIFI_DISCONNECTED,
+	DISPLAY_STATE_WIFI_CONNECTING,
+	DISPLAY_STATE_CONNECTED,
+	DISPLAY_STATE_STRING,
+	DISPLAY_STATE_TIME,
+	DISPLAY_STATE_MAX
+
+} display_state_t;
+
+extern display_state_t display_state;
 #endif
 
