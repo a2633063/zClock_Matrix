@@ -28,6 +28,11 @@ max7219_set_reg(uint8_t reg, uint8_t dat) {
 }
 
 void user_max7219_timer_func(void *arg) {
+
+}
+
+void ICACHE_FLASH_ATTR
+user_max7219_dis_refresh(void) {
 	uint8_t i, j;
 	for (i = 0; i < 8; i++) {
 		GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 0);
@@ -48,21 +53,11 @@ void user_max7219_timer_func(void *arg) {
 	}
 
 	user_max7219_set_on(brightness_on);
-	user_max7219_set_brightness(brightness-1);
+	user_max7219_set_brightness(brightness - 1);
 }
 
 void ICACHE_FLASH_ATTR
 user_max7219_init(void) {
-	uint8_t max7219_init_dat[7][2] = {
-	//max7219 init dat
-			{ 0x0C, 0x00 },    // display off
-			{ 0x00, 0xFF },    // no LEDtest
-			{ 0x09, 0x00 },    // BCD off
-			{ 0x0F, 0x00 },    // normal operation
-			{ 0x0B, 0x07 },    // start display
-			{ 0x0A, 0x04 },    // brightness
-			{ 0x0C, 0x01 }    // display on
-	};
 
 	uint8_t i, j;
 	spi_master_init(HSPI);
@@ -74,16 +69,23 @@ user_max7219_init(void) {
 	CLEAR_PERI_REG_MASK(PERIPHS_IO_MUX, BIT9);
 	PIN_FUNC_SELECT(MAX7219_CS_IO_MUX, MAX7219_CS_IO_FUNC);
 	GPIO_OUTPUT_SET(GPIO_ID_PIN(MAX7219_CS_IO_NUM), 1);
-	os_delay_us(100);
+	os_delay_us(20);
 
-	for (i = 0; i < 7; i++) {
-		max7219_set_reg(max7219_init_dat[i][0], max7219_init_dat[i][1]);
-	}
+	max7219_set_reg(0x0C, 0x00);    // display off
+	max7219_set_reg(0x00, 0xFF);    // no LEDtest
+	max7219_set_reg(0x09, 0x00);    // BCD off
+	max7219_set_reg(0x0F, 0x00);    // normal operation
+//	max7219_set_reg(0x0A, 0x04);    // brightness
+
 	user_max7219_clear(0);
-	user_max7219_timer_func(NULL);
-	//	os_timer_disarm(&timer_tm1628);
-	os_timer_setfn(&timer_max7219, (os_timer_func_t *) user_max7219_timer_func, NULL);
-	os_timer_arm(&timer_max7219, 50, 1);	//每150ms刷新一次显示
+	user_max7219_dis_refresh();
+	max7219_set_reg(0x0B, 0x07);    // start display
+	max7219_set_reg(0x0C, 0x01);   // display on
+
+//	user_max7219_timer_func(NULL);
+//	//	os_timer_disarm(&timer_tm1628);
+//	os_timer_setfn(&timer_max7219, (os_timer_func_t *) user_max7219_timer_func, NULL);
+//	os_timer_arm(&timer_max7219, 50, 1);	//每150ms刷新一次显示
 
 }
 
@@ -162,8 +164,6 @@ user_max7219_dis_str(char * ch, int8_t x, int8_t y) {
 	}
 }
 
-
-
 void ICACHE_FLASH_ATTR
 user_max7219_dis_num(char ch, int8_t x, int8_t y) {
 	int8_t i = 0, j, k;
@@ -185,16 +185,16 @@ user_max7219_dis_num(char ch, int8_t x, int8_t y) {
 	else if (y < 0)
 		i = -y;
 
-	ch %= 10;
-	for (i; i < 8 && y + i < 8; i++) {
+	if (ch > 9)
+		ch = 10;
+
+	for (; i < 8 && y + i < 8; i++) {
 		if (x_d >= 0 && x_d < 4)
-			display[x_d][y + i] = display[x_d][y + i] & (~(0xf8 >> x_r)) | (NUM_Font_4x8[ch][i] >> x_r);
+			display[x_d][y + i] = (display[x_d][y + i] & (~(0xf8 >> x_r))) | (NUM_Font_4x8[ch][i] >> x_r);
 		if (x_d + 1 >= 0 && x_d + 1 < 4)
-			display[x_d + 1][y + i] = display[x_d + 1][y + i] & (~(0xf8 << (8 - x_r))) | (NUM_Font_4x8[ch][i] << (8 - x_r));
+			display[x_d + 1][y + i] = (display[x_d + 1][y + i] & (~(0xf8 << (8 - x_r)))) | (NUM_Font_4x8[ch][i] << (8 - x_r));
 	}
 }
-
-
 
 void ICACHE_FLASH_ATTR
 user_max7219_dis_num_small(char ch, int8_t x, int8_t y) {
@@ -225,3 +225,106 @@ user_max7219_dis_num_small(char ch, int8_t x, int8_t y) {
 			display[x_d + 1][y + i] = display[x_d + 1][y + i] & (~(0xf0 << (8 - x_r))) | (NUM_Font_3x6[ch][i] << (8 - x_r));
 	}
 }
+
+void ICACHE_FLASH_ATTR
+user_max7219_dis_scroll_num(uint8_t up_val, uint8_t down_val, int8_t scroll, int8_t x, int8_t y) {
+	int8_t i = 0, j, k;
+	int8_t x_d, x_r;	//x_d  x_r
+
+	if (scroll > 8)
+		scroll = 8;
+
+	x_d = x / 8;
+	x_r = x % 8;
+
+	//处理x y为-1时情况
+	if (x < -5)
+		return;
+	else if (x < 0) {
+		x_d = -1;
+		x_r = 8 - (-x) % 8;
+	}
+
+	if (y < -7)
+		return;
+	else if (y < 0)
+		i = -y;
+
+	if (up_val > 9)
+		up_val = 10;
+	if (down_val > 9)
+		down_val = 10;
+
+	for (; i < 8 && y + i < 8 && i + scroll < 8; i++) {
+		if (x_d >= 0 && x_d < 4) {
+			display[x_d][y + i] &= (~(0xf8 >> x_r));
+			display[x_d][y + i] |= (NUM_Font_4x8[up_val][i + scroll] >> x_r);
+		}
+		if (x_d + 1 >= 0 && x_d + 1 < 4) {
+			display[x_d + 1][y + i] &= (~(0xf8 << (8 - x_r)));
+			display[x_d + 1][y + i] |= (NUM_Font_4x8[up_val][i + scroll] << (8 - x_r));
+		}
+	}
+
+	for (; i < 8 && y + i < 8; i++) {
+		if (x_d >= 0 && x_d < 4) {
+			display[x_d][y + i] &= (~(0xf8 >> x_r));
+			display[x_d][y + i] |= (NUM_Font_4x8[down_val][i + scroll - 8] >> x_r);
+		}
+		if (x_d + 1 >= 0 && x_d + 1 < 4) {
+			display[x_d + 1][y + i] &= (~(0xf8 << (8 - x_r)));
+			display[x_d + 1][y + i] |= (NUM_Font_4x8[down_val][i + scroll - 8] << (8 - x_r));
+		}
+	}
+}
+
+void ICACHE_FLASH_ATTR
+user_max7219_dis_scroll_num_small(uint8_t up_val, uint8_t down_val, int8_t scroll, int8_t x, int8_t y) {
+	int8_t i = 0, j, k;
+	int8_t x_d, x_r;	//x_d  x_r
+
+	if (scroll > 6)
+		scroll = 6;
+
+	x_d = x / 8;
+	x_r = x % 8;
+
+	//处理x y为-1时情况
+	if (x < -4)
+		return;
+	else if (x < 0) {
+		x_d = -1;
+		x_r = 8 - (-x) % 8;
+	}
+
+	if (y < -5)
+		return;
+	else if (y < 0)
+		i = -y;
+
+	up_val %= 10;
+	down_val %= 10;
+
+	for (; i < 6 && y + i < 8 && i + scroll < 6; i++) {
+		if (x_d >= 0 && x_d < 4) {
+			display[x_d][y + i] &= (~(0xf0 >> x_r));
+			display[x_d][y + i] |= (NUM_Font_3x6[up_val][i + scroll] >> x_r);
+		}
+		if (x_d + 1 >= 0 && x_d + 1 < 4) {
+			display[x_d + 1][y + i] &= (~(0xf0 << (8 - x_r)));
+			display[x_d + 1][y + i] |= (NUM_Font_3x6[up_val][i + scroll] << (8 - x_r));
+		}
+	}
+
+	for (; i < 6 && y + i < 8; i++) {
+		if (x_d >= 0 && x_d < 4) {
+			display[x_d][y + i] &= (~(0xf0 >> x_r));
+			display[x_d][y + i] |= (NUM_Font_3x6[down_val][i + scroll - 6] >> x_r);
+		}
+		if (x_d + 1 >= 0 && x_d + 1 < 4) {
+			display[x_d + 1][y + i] &= (~(0xf0 << (8 - x_r)));
+			display[x_d + 1][y + i] |= (NUM_Font_3x6[down_val][i + scroll - 6] << (8 - x_r));
+		}
+	}
+}
+

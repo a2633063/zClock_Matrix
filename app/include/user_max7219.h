@@ -18,4 +18,8 @@ void user_max7219_dis_char(char ch, int8_t x, int8_t y);
 void user_max7219_dis_str(char * ch, int8_t x, int8_t y);
 void user_max7219_dis_num(char ch, int8_t x, int8_t y);
 void user_max7219_dis_num_small(char ch, int8_t x, int8_t y);
+void user_max7219_dis_refresh(void);
+void user_max7219_dis_scroll_num(uint8_t up_val, uint8_t down_val, int8_t scroll, int8_t x, int8_t y);
+void user_max7219_dis_scroll_num_small(uint8_t up_val, uint8_t down_val, int8_t scroll, int8_t x, int8_t y);
+
 #endif

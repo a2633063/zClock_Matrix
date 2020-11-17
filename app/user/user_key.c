@@ -28,7 +28,7 @@ user_key_short_press(void) {
 		return;
 	}
 
-	user_config.on = !user_config.on;
+//	user_config.on = !user_config.on;
 
 	os_sprintf(strJson, "{\"mac\":\"%s\",\"on\":%d}", strMac, user_config.on);
 	user_json_analysis(false, strJson);
@@ -68,4 +68,9 @@ user_key_init(void) {
 	keys.single_key = single_key;
 	key_init(&keys);
 
+}
+
+uint8_t ICACHE_FLASH_ATTR
+user_key_read(void) {
+	return GPIO_INPUT_GET(GPIO_ID_PIN(GPIO_KEY_0_IO_NUM));
 }
