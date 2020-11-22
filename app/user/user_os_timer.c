@@ -30,7 +30,7 @@ uint32_t current_stamp = 0;
 uint8_t timeBCD[7];
 LOCAL os_timer_t timer_rtc;
 uint32_t timer_count = 0;
-
+uint8_t * string_p = NULL;
 struct struct_time time_last;
 display_state_t display_state_last = DISPLAY_STATE_INIT;
 void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
@@ -416,11 +416,60 @@ void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
 			timer_count = 0;
 
 		break;
+	case DISPLAY_STATE_STRING:
+		if (display_state_last != display_state) {
+			timer_count++;
+			//下滚动部分
+			if (timer_count < 9) {
+				for (i = 7; i > 0; i--) {
+					for (j = 0; j < 4; j++)
+						display[j][i] = display[j][i - 1];
+				}
+				for (j = 0; j < 4; j++)
+					display[j][0] = 0;
+			}
+
+			if (timer_count == 8) {
+				display_state_last = display_state;
+				timer_count = 0;
+			}
+			dis_refresh_flag = 1;
+			break;
+		}
+		if (string_p == NULL) {
+			user_set_display_state(DISPLAY_STATE_TIME);
+			break;
+		}
+		if (timer_num % 3 == 0) {
+			timer_count++;
+			user_max7219_clear(0);
+			if (timer_count < os_strlen(string_p) * 6 + 32) {
+				user_max7219_dis_str(string_p, 32 - timer_count, 0);
+				dis_refresh_flag = 1;
+			} else {
+				if (string_p != NULL) {
+					os_free(string_p);
+					string_p = NULL;
+				}
+				user_set_display_state(DISPLAY_STATE_TIME);
+			}
+		}
+		break;
 	}
 
 	if (dis_refresh_flag == 1)
 		user_max7219_dis_refresh();
 
+}
+
+void ICACHE_FLASH_ATTR
+user_set_display_string(uint8_t *p) {
+	user_set_display_state(DISPLAY_STATE_STRING);
+	if (string_p != NULL) {
+		os_free(string_p);
+		string_p = NULL;
+	}
+	string_p = p;
 }
 
 void ICACHE_FLASH_ATTR

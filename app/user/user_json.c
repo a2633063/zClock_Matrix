@@ -14,6 +14,7 @@
 #include "user_setting.h"
 #include "user_function.h"
 #include "user_max7219.h"
+#include "user_os_timer.h"
 
 bool ICACHE_FLASH_ATTR json_task_analysis(unsigned char x, cJSON * pJsonRoot, cJSON * pJsonSend);
 
@@ -115,12 +116,27 @@ void ICACHE_FLASH_ATTR user_json_analysis(bool udp_flag, u8* jsonRoot) {
 				cJSON_AddNumberToObject(json_send, "on", brightness_on == 0 ? 0 : 1);
 			}
 
+			//½âÎö×Ö·û´®ÏÔÊ¾
+			cJSON *p_string = cJSON_GetObjectItem(pJsonRoot, "string");
+			if (p_string && cJSON_IsString(p_string)) {
+				os_printf("string sizeof:%d\n", 1+os_strlen(p_string->valuestring));
+				uint8_t *p = (uint8_t *) os_zalloc(1+os_strlen(p_string->valuestring));
+				if (p == NULL) {
+					os_printf("string error!\n", p);
+					cJSON_AddStringToObject(json_send, "string", "error!");
+				} else {
+					os_strcpy(p, p_string->valuestring);
+					os_printf("string:%c\n", *p);
+					user_set_display_string(p);
+					cJSON_AddStringToObject(json_send, "string", p_string->valuestring);
+				}
+			}
 			//½âÎö²âÊÔ
 			cJSON *p_test = cJSON_GetObjectItem(pJsonRoot, "test");
 			if (p_test && cJSON_IsArray(p_test)) {
 				if (cJSON_GetArraySize(p_test) == 2) {
 					user_max7219_clear(0);
-					user_max7219_dis_str("ABCD",cJSON_GetArrayItem(p_test, 0)->valueint,cJSON_GetArrayItem(p_test, 1)->valueint);
+					user_max7219_dis_str("ABCD", cJSON_GetArrayItem(p_test, 0)->valueint, cJSON_GetArrayItem(p_test, 1)->valueint);
 				} else
 					for (i = 0; i < cJSON_GetArraySize(p_test); i++) {
 						display[i / 8][i % 8] = cJSON_GetArrayItem(p_test, i)->valueint;
