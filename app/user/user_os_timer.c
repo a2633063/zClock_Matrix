@@ -115,7 +115,7 @@ void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
 				user_set_display_state(DISPLAY_STATE_WIFI_CONNECTING);
 			} else {
 				os_printf("DISPLAY_STATE_WIFI_AP\n");
-				user_set_display_state(DISPLAY_STATE_WIFI_AP);
+				user_set_display_state(DISPLAY_STATE_AP_WEB);
 			}
 		}
 		break;
@@ -149,28 +149,23 @@ void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
 			break;
 		}
 
-		if (timer_count == 1) {
+		if (display[0][7] == 0 && display[1][7] == 0 && display[2][7] == 0 && display[3][7] == 0) {
 			display[0][7] = 0x80;
-		} else if (timer_count > 1) {
+		} else {
 			for (j = 3; j > 0; j--)
 				display[j][7] = (display[j][7] >> 1) | (display[j - 1][7] << 7);
-
 			display[0][7] = display[0][7] >> 1;
+		}
 
-			if (timer_count == 35) {
-				timer_count = 0;
-				i = wifi_station_get_connect_status();
-				switch (i) {
-				case STATION_CONNECTING:
-					break;
-				case STATION_WRONG_PASSWORD:
-				case STATION_NO_AP_FOUND:
-				case STATION_CONNECT_FAIL:
+		if (timer_count % 8 == 0) {
+			i = wifi_station_get_connect_status();
+			if (i == STATION_GOT_IP) {
+				os_printf("STATION_GOT_IP\n");
+				user_set_display_state(DISPLAY_STATE_OK);
+			} else {
+				if (timer_count > 1200) {		//1200*25ms=30s
+					os_printf("wifi_station_get_connect_status error:%d\n",i);
 					user_set_display_state(DISPLAY_STATE_ERR);
-					break;
-				case STATION_GOT_IP:
-					user_set_display_state(DISPLAY_STATE_OK);
-					break;
 				}
 			}
 		}
