@@ -7,7 +7,7 @@
 
 #define VERSION "v0.0.1"
 
-#define TYPE 10
+#define TYPE 9
 #define TYPE_NAME "zClock_Matrix"
 
 #define DEVICE_NAME "zClock_Matrix_%02X%02X"
@@ -50,10 +50,10 @@ typedef enum {
 	DISPLAY_STATE_INIT = 0, DISPLAY_STATE_WIFI_DISCONNECTED,	//断开
 	DISPLAY_STATE_WIFI_CONNECTING,		//正在连接
 	DISPLAY_STATE_AP_WEB,				//ap热点配网模式 显示AP WEB
-	DISPLAY_STATE_CONNECTED,			//已连接,已获取到ip
+//	DISPLAY_STATE_CONNECTED,			//已连接,已获取到ip
 	DISPLAY_STATE_OK,					//显示OK!!
 	DISPLAY_STATE_ERR,					//显示Err!
-	DISPLAY_STATE_CON,					//显示CON!
+//	DISPLAY_STATE_CON,					//显示CON!
 	DISPLAY_STATE_AP_CONFIRM,			//显示AP? 按下按键后进入配网模式
 
 	DISPLAY_STATE_STRING,				//显示滚动字符串

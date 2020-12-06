@@ -164,7 +164,7 @@ void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
 				user_set_display_state(DISPLAY_STATE_OK);
 			} else {
 				if (timer_count > 1200) {		//1200*25ms=30s
-					os_printf("wifi_station_get_connect_status error:%d\n",i);
+					os_printf("wifi_station_get_connect_status error:%d\n", i);
 					user_set_display_state(DISPLAY_STATE_ERR);
 				}
 			}
@@ -412,6 +412,10 @@ void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
 
 		break;
 	case DISPLAY_STATE_STRING:
+		if (string_p == NULL) {
+			user_set_display_state(DISPLAY_STATE_TIME);
+			break;
+		}
 		if (display_state_last != display_state) {
 			timer_count++;
 			//下滚动部分
@@ -431,10 +435,7 @@ void ICACHE_FLASH_ATTR user_os_timer_func(void *arg) {
 			dis_refresh_flag = 1;
 			break;
 		}
-		if (string_p == NULL) {
-			user_set_display_state(DISPLAY_STATE_TIME);
-			break;
-		}
+
 		if (timer_num % 3 == 0) {
 			timer_count++;
 			user_max7219_clear(0);
