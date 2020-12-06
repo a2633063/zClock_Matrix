@@ -101,7 +101,7 @@
 
 ## 烧录固件相关
 
-见[固件烧录](https://github.com/a2633063/zClock/wiki/固件烧录)
+见[固件烧录](https://github.com/a2633063/zClock_Matrix/wiki/固件烧录)
 
 烧录固件完成后,即可开始使用
 
@@ -109,7 +109,7 @@
 
 ## 开始使用/使用方法
 
-见[开始使用](https://github.com/a2633063/zClock/wiki/开始使用)
+见[开始使用](https://github.com/a2633063/zClock_Matrix/wiki/开始使用)
 
 
 
@@ -125,6 +125,6 @@
 
 所有通信协议开源,你可以自己开发控制app或ios端
 
-见[通信协议](https://github.com/a2633063/zClock/wiki/通信协议)
+见[通信协议](https://github.com/a2633063/zClock_Matrix/wiki/通信协议)
 
 
