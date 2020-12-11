@@ -39,7 +39,7 @@ void user_mdns_config() {
 	os_memset(mdns_data_type, 0, 16);
 	os_sprintf(mdns_strName, MDNS_DEVICE_NAME, strMac + 8);
 
-	os_sprintf(mdns_data_mac, "mac=%s.", strMac);
+	os_sprintf(mdns_data_mac, "mac=%s", strMac);
 	os_sprintf(mdns_data_type, "type=%d", TYPE);
 	os_sprintf(mdns_data_version, "version=%s", VERSION);
 

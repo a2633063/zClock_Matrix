@@ -5,7 +5,7 @@
 #define BCDtoDEC(x) ( ((x)>>4)*10+(x)%0x10  )           //BCD码转换为十进制表示方式
 #define DECtoBCD(x) ( (((x)/10)<<4)+(x)%10  )           //十进制转换为BCD码表示方式
 
-#define VERSION "v0.0.1"
+#define VERSION "v0.0.2"
 
 #define TYPE 9
 #define TYPE_NAME "zClock_Matrix"
