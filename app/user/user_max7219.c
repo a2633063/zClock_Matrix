@@ -120,9 +120,9 @@ user_max7219_set_on(uint8_t on) {
 #define FONT_WIDTH_6
 
 void ICACHE_FLASH_ATTR
-user_max7219_dis_char(char ch, int8_t x, int8_t y) {
-	int8_t i = 0, j, k;
-	int8_t x_d, x_r;	//x_d  x_r
+user_max7219_dis_char(char ch, int16_t x, int16_t y) {
+	int16_t i = 0, j, k;
+	int16_t x_d, x_r;	//x_d  x_r
 
 	x_d = x / 8;
 	x_r = x % 8;
@@ -156,7 +156,7 @@ user_max7219_dis_char(char ch, int8_t x, int8_t y) {
 }
 
 void ICACHE_FLASH_ATTR
-user_max7219_dis_str(char * ch, int8_t x, int8_t y) {
+user_max7219_dis_str(char * ch, int16_t x, int16_t y) {
 	while (*ch != 0) {
 		user_max7219_dis_char(*ch, x, y);
 		x += 6;
@@ -165,9 +165,9 @@ user_max7219_dis_str(char * ch, int8_t x, int8_t y) {
 }
 
 void ICACHE_FLASH_ATTR
-user_max7219_dis_num(char ch, int8_t x, int8_t y) {
-	int8_t i = 0, j, k;
-	int8_t x_d, x_r;	//x_d  x_r
+user_max7219_dis_num(char ch, int16_t x, int16_t y) {
+	int16_t i = 0, j, k;
+	int16_t x_d, x_r;	//x_d  x_r
 
 	x_d = x / 8;
 	x_r = x % 8;
@@ -197,9 +197,9 @@ user_max7219_dis_num(char ch, int8_t x, int8_t y) {
 }
 
 void ICACHE_FLASH_ATTR
-user_max7219_dis_num_small(char ch, int8_t x, int8_t y) {
-	int8_t i = 0, j, k;
-	int8_t x_d, x_r;	//x_d  x_r
+user_max7219_dis_num_small(char ch, int16_t x, int16_t y) {
+	int16_t i = 0, j, k;
+	int16_t x_d, x_r;	//x_d  x_r
 
 	x_d = x / 8;
 	x_r = x % 8;
